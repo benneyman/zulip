@@ -3,6 +3,7 @@ import logging
 import os
 import ujson
 import shutil
+import ahocorasick
 
 from boto.s3.connection import S3Connection
 from boto.s3.key import Key
@@ -256,14 +257,14 @@ def fix_message_rendered_content(realm: Realm,
             # We don't handle alert words on import from third-party
             # platforms, since they generally don't have an "alert
             # words" type feature, and notifications aren't important anyway.
-            realm_alert_words = dict()  # type: RealmAlertWords
+            realm_alert_words_automaton = ahocorasick.Automaton()  # type: ahocorasick.Automaton
             message_user_ids = set()  # type: Set[int]
 
             rendered_content = do_render_markdown(
                 message=cast(Message, message_object),
                 content=content,
                 realm=realm,
-                realm_alert_words=realm_alert_words,
+                realm_alert_words_automaton = realm_alert_words_automaton,
                 message_user_ids=message_user_ids,
                 sent_by_bot=sent_by_bot,
                 translate_emoticons=translate_emoticons,

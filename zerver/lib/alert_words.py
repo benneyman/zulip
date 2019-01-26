@@ -1,7 +1,8 @@
 
 from django.db.models import Q
 from zerver.models import UserProfile, Realm
-from zerver.lib.cache import cache_with_key, realm_alert_words_cache_key
+from zerver.lib.cache import cache_with_key, realm_alert_words_cache_key, \
+    realm_alert_words_automaton_cache_key
 import ujson
 from typing import Dict, Iterable, List
 
@@ -37,3 +38,18 @@ def remove_user_alert_words(user_profile: UserProfile, alert_words: Iterable[str
 def set_user_alert_words(user_profile: UserProfile, alert_words: List[str]) -> None:
     user_profile.alert_words = ujson.dumps(alert_words)
     user_profile.save(update_fields=['alert_words'])
+
+@cache_with_key(realm_alert_words_automaton_cache_key, timeout=3600*24)
+def get_alert_word_automaton(realm: Realm) -> ahocorasick.Automaton:
+    user_id_with_words = alert_words_in_realm(realm)
+    alert_word_automaton  = ahocorasick.Automaton()
+    for (user_id, alert_words) in user_id_with_words.items():
+        for alert_word in alert_words:
+            trimmed_alert_word = alert_word.lower()
+            if alert_word_automaton.exists(trimmed_alert_word):
+                (key, user_ids_for_alert_word) = alert_word_automaton.get(trimmed_alert_word)
+                user_ids_for_alert_word.add(user_id)
+            else:
+                alert_word_automaton.add_word(trimmed_alert_word, (trimmed_alert_word, set([user_id])))
+    alert_word_automaton.make_automaton()
+    return alert_word_automaton

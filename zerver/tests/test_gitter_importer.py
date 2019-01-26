@@ -114,6 +114,7 @@ class GitterImporter(ZulipTestCase):
     def test_gitter_import_to_existing_database(self, mock_process_avatars: mock.Mock) -> None:
         output_dir = self._make_output_dir()
         gitter_file = os.path.join(os.path.dirname(__file__), 'fixtures/gitter_data.json')
+
         do_convert_data(gitter_file, output_dir)
 
         do_import_realm(output_dir, 'test-gitter-import')

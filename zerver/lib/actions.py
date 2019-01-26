@@ -860,13 +860,13 @@ def render_incoming_message(message: Message,
                             realm: Realm,
                             mention_data: Optional[bugdown.MentionData]=None,
                             email_gateway: Optional[bool]=False) -> str:
-    realm_alert_words = alert_words_in_realm(realm)
+    realm_alert_words_automaton = get_alert_word_automaton(realm)
     try:
         rendered_content = render_markdown(
             message=message,
             content=content,
             realm=realm,
-            realm_alert_words=realm_alert_words,
+            realm_alert_words_automaton = realm_alert_words_automaton,
             user_ids=user_ids,
             mention_data=mention_data,
             email_gateway=email_gateway,
